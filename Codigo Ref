@@ -1,0 +1,153 @@
+<?php
+// Interfaces para aplicar ISP e DIP
+interface ICadastroCliente {
+    public function cadastrarCliente(Cliente $cliente);
+}
+
+interface ICadastroServico {
+    public function cadastrarServico(Servico $servico);
+}
+
+interface IGerenciamentoAgendamento {
+    public function agendarServico(Agendamento $agendamento);
+    public function listarAgendamentos();
+}
+
+// Classe Pet: SRP aplicado
+class Pet {
+    private $nome;
+    private $tipo;
+    private $raca;
+    private $idade;
+
+    public function __construct($nome, $tipo, $raca, $idade) {
+        $this->nome = $nome;
+        $this->tipo = $tipo;
+        $this->raca = $raca;
+        $this->idade = $idade;
+    }
+
+    public function __toString() {
+        return "Nome: {$this->nome}, Tipo: {$this->tipo}, Raça: {$this->raca}, Idade: {$this->idade} anos";
+    }
+}
+
+// Classe Cliente: SRP aplicado
+class Cliente {
+    private $nome;
+    private $telefone;
+    private $email;
+    private $pets = [];
+
+    public function __construct($nome, $telefone, $email) {
+        $this->nome = $nome;
+        $this->telefone = $telefone;
+        $this->email = $email;
+    }
+
+    public function adicionarPet(Pet $pet) {
+        $this->pets[] = $pet;
+    }
+
+    public function __toString() {
+        $petsNomes = array_map(function($pet) { return $pet->nome; }, $this->pets);
+        $petsInfo = implode(', ', $petsNomes);
+        return "Cliente: {$this->nome}, Telefone: {$this->telefone}, Email: {$this->email}, Pets: {$petsInfo}";
+    }
+}
+
+// Classe base para Servico: LSP e OCP aplicados
+abstract class Servico {
+    protected $nome;
+    protected $preco;
+
+    public function __construct($nome, $preco) {
+        $this->nome = $nome;
+        $this->preco = $preco;
+    }
+
+    abstract public function getDescricao();
+    
+    public function __toString() {
+        return "Serviço: {$this->nome}, Preço: R$" . number_format($this->preco, 2, ',', '.');
+    }
+}
+
+// Implementação específica de serviço
+class Banho extends Servico {
+    public function getDescricao() {
+        return "Serviço de Banho para Pets";
+    }
+}
+
+// Classe de Agendamento: SRP aplicado
+class Agendamento {
+    private $cliente;
+    private $pet;
+    private $servico;
+    private $data;
+
+    public function __construct(Cliente $cliente, Pet $pet, Servico $servico, $data) {
+        $this->cliente = $cliente;
+        $this->pet = $pet;
+        $this->servico = $servico;
+        $this->data = $data;
+    }
+
+    public function __toString() {
+        return "Agendamento - Cliente: {$this->cliente->nome}, Pet: {$this->pet->nome}, "
+             . "Serviço: {$this->servico->nome}, Data: {$this->data}";
+    }
+}
+
+// Implementações específicas de gerenciamento, aplicando ISP e DIP
+class GerenciamentoClientes implements ICadastroCliente {
+    private $clientes = [];
+
+    public function cadastrarCliente(Cliente $cliente) {
+        $this->clientes[] = $cliente;
+    }
+}
+
+class GerenciamentoServicos implements ICadastroServico {
+    private $servicos = [];
+
+    public function cadastrarServico(Servico $servico) {
+        $this->servicos[] = $servico;
+    }
+}
+
+class GerenciamentoAgendamentos implements IGerenciamentoAgendamento {
+    private $agendamentos = [];
+
+    public function agendarServico(Agendamento $agendamento) {
+        $this->agendamentos[] = $agendamento;
+    }
+
+    public function listarAgendamentos() {
+        foreach ($this->agendamentos as $agendamento) {
+            echo $agendamento . PHP_EOL;
+        }
+    }
+}
+
+// Exemplo de uso
+$pet1 = new Pet("Rex", "Cachorro", "Labrador", 3);
+$cliente1 = new Cliente("João Silva", "123456789", "joao@exemplo.com");
+$cliente1->adicionarPet($pet1);
+
+$servico1 = new Banho("Banho", 50.00);
+$agendamento1 = new Agendamento($cliente1, $pet1, $servico1, "2024-11-01");
+
+$gerenciamentoClientes = new GerenciamentoClientes();
+$gerenciamentoClientes->cadastrarCliente($cliente1);
+
+$gerenciamentoServicos = new GerenciamentoServicos();
+$gerenciamentoServicos->cadastrarServico($servico1);
+
+$gerenciamentoAgendamentos = new GerenciamentoAgendamentos();
+$gerenciamentoAgendamentos->agendarServico($agendamento1);
+
+echo "Agendamentos:" . PHP_EOL;
+$gerenciamentoAgendamentos->listarAgendamentos();
+?>
